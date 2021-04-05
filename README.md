@@ -7,11 +7,12 @@ Don't skip that please!
 ## What does the script do?
 Download the source files from https://onevinn.schrewelius.it/Files/IPUInstaller/IPUInstaller.zip  
 Imports IPU Installer app and Deployment Scheduler app to ConfigMgr.\
-Deploys IPU Installer app and Deployment Scheduler app to the correct collections.\
+Deploys IPU Installer app and Deployment Scheduler app to the main IPU-collection.\
 Creates all the collections including the correct rules.\
 Creates a new Device Collection folder that will house the newly created collections.\
 Creates a new Client Policy with a more frequent schedule for Hardware Inventory. Sets PS executionpolicy to ByPass\
-Deploys the Client Policy to the newly created collections to be used with IPU Installer.
+Deploys the Client Policy to the newly created collections to be used with IPU Installer.\
+Creates and deploys a maintenance window to the main IPU-collection. _This might not be needed in your environment, in that case remember to delete it!_
 
 ## Current limitations:
 The script will not update or import any .mof files, you will currently have to this manually.\
