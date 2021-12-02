@@ -157,14 +157,14 @@ function New-CMPowershellScript {
 # Variables for app creation
 $SourceServer = '\\server\PkgSource$' # UNC path to source share
 $Release = '21H2' # Used for Collection Names & App Names
-$OrgName = "COMPANY" # Defines the publisher on the IPUApp and Deployment Scheduler app 
+$OrgName = 'COMPANY' # Defines the publisher on the IPUApp and Deployment Scheduler app 
 
 
 # IPU App
 $IPUAppName = "Windows 10 $Release Upgrade"
 $IPUAppSourceLocation = "$SourceServer\Applications\eKlient IPUApplication\$Release\" # This will be the App Source on your server
 $IPUAppImageIconURL = 'https://upload.wikimedia.org/wikipedia/commons/0/08/Windows_logo_-_2012_%28dark_blue%29.png'
-$IPUAppDownloadURL = "https://onevinn.schrewelius.it/Files/IPUInstaller/IPUInstaller.zip"
+$IPUAppDownloadURL = 'https://onevinn.schrewelius.it/Files/IPUInstaller/IPUInstaller.zip'
 $IPUAppExtractPath = "$SourceServer\IPUInstaller - eKlient\2011-11-24 21H2" # IPUInstaller.zip will be extracted here
 $UpgradeMediaPath = "$SourceServer\OSSources\Win10 Ent x64 21H2 19044.1348"  # Path to your IPU Media folder
 $DeadlineDateTime = '11/30/2022 20:00:00' # This decides the end date for the IPU, users can't schedule to upgrade any later than this
