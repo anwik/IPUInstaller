@@ -221,7 +221,7 @@ Write-Host 'Starting Build of Onevinn IPUApplication Build' -ForegroundColor Yel
 Set-Location -Path 'c:\'
 if (!(Test-Path $IPUAppExtractPath)) {
     Write-Host "Creating Folder $IPUAppExtractPath" -ForegroundColor Green
-    $NewFolder = New-Item -Path $IPUAppExtractPath -ItemType directory -Force
+    New-Item -Path $IPUAppExtractPath -ItemType directory -Force
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     Write-Host ' Downloading Requirements from Internet' -ForegroundColor Green
     #Download IPUApplication from OneVinn
@@ -289,7 +289,7 @@ Set-Location -Path 'C:'
 if (Test-Path $IPUAppSourceLocation) {}
 else {               
     Write-Host " Creating Source Folder Structure: $IPUAppSourceLocation" -ForegroundColor Green
-    $NewFolder = New-Item -Path $IPUAppSourceLocation -ItemType directory -ErrorAction SilentlyContinue      
+    New-Item -Path $IPUAppSourceLocation -ItemType directory -ErrorAction SilentlyContinue      
     Write-Host ' Starting Copy of Content, App & Media' -ForegroundColor Green
     Copy-Item -Path "$IPUAppExtractPath\IPUApplication\*" -Destination $IPUAppSourceLocation -Recurse -Force
     Copy-Item -Path "$UpgradeMediaPath\*" -Destination "$IPUAppSourceLocation\Media" -Recurse -Force
@@ -299,7 +299,7 @@ if (Get-CMDeploymentType -ApplicationName $IPUAppName -DeploymentTypeName $IPUAp
     Write-Host ' AppDT already Created' -ForegroundColor Green
 } else {
     Write-Host ' Starting AppDT Creation' -ForegroundColor Green
-    $NewIPUAppDT = Add-CMScriptDeploymentType -ApplicationName $IPUAppName -DeploymentTypeName $IPUAppName -ContentLocation $IPUAppSourceLocation -InstallCommand 'IPUInstaller.exe' -InstallationBehaviorType InstallForSystem -Force32Bit:$true -EstimatedRuntimeMins '60' -MaximumRuntimeMins '120' -ScriptLanguage PowerShell -ScriptText $DetectionMethod
+    Add-CMScriptDeploymentType -ApplicationName $IPUAppName -DeploymentTypeName $IPUAppName -ContentLocation $IPUAppSourceLocation -InstallCommand 'IPUInstaller.exe' -InstallationBehaviorType InstallForSystem -Force32Bit:$true -EstimatedRuntimeMins '60' -MaximumRuntimeMins '120' -ScriptLanguage PowerShell -ScriptText $DetectionMethod
     Write-Host "  Created AppDT: $IPUAppName" -ForegroundColor Green
     #Distribute Content
     Get-CMDistributionPointGroup | ForEach-Object { Start-CMContentDistribution -ApplicationName $IPUAppName -DistributionPointGroupName $_.Name }
@@ -323,7 +323,7 @@ Set-Location -Path 'C:'
 if (Test-Path $DSAppSourceLocation) {}
 else {               
     Write-Host " Creating Source Folder Structure: $DSAppSourceLocation" -ForegroundColor Green
-    $NewFolder = New-Item -Path $DSAppSourceLocation -ItemType directory -ErrorAction SilentlyContinue      
+    New-Item -Path $DSAppSourceLocation -ItemType directory -ErrorAction SilentlyContinue      
     Write-Host ' Starting Copy of Content' -ForegroundColor Green
     Copy-Item -Path "$IPUAppExtractPath\$($DSAppName.Name)\$($DSAppName.Name).msi" -Destination $DSAppSourceLocation -Recurse -Force
 }
@@ -333,7 +333,7 @@ if (Get-CMDeploymentType -ApplicationName $($DSAppName.Name) -DeploymentTypeName
 } else {
     Write-Host ' Starting AppDT Creation' -ForegroundColor Green
     $DSAppDetectionMethod = New-CMDetectionClauseWindowsInstaller -ProductCode $DSAppProductCode -Value -ExpressionOperator GreaterEquals -ExpectedValue "$DSAppVersionNumber"
-    $NewDSAppDT = Add-CMMsiDeploymentType -ApplicationName $($DSAppName.Name) -DeploymentTypeName $($DSAppName.Name) -ContentLocation "$DSAppSourceLocation\$($DSAppName.Name).msi" -InstallCommand "msiexec /i `"$($DSAppName.Name).msi`" /qn" -InstallationBehaviorType InstallForSystem -Force32Bit:$true -EstimatedRuntimeMins '15' -MaximumRuntimeMins '30' -AddDetectionClause $DSAppDetectionMethod
+    Add-CMMsiDeploymentType -ApplicationName $($DSAppName.Name) -DeploymentTypeName $($DSAppName.Name) -ContentLocation "$DSAppSourceLocation\$($DSAppName.Name).msi" -InstallCommand "msiexec /i `"$($DSAppName.Name).msi`" /qn" -InstallationBehaviorType InstallForSystem -Force32Bit:$true -EstimatedRuntimeMins '15' -MaximumRuntimeMins '30' -AddDetectionClause $DSAppDetectionMethod
     Write-Host "  Created AppDT: $($DSAppName.Name)" -ForegroundColor Green
     #Distribute Content
     Get-CMDistributionPointGroup | ForEach-Object { Start-CMContentDistribution -ApplicationName $($DSAppName.Name) -DistributionPointGroupName $_.Name }
@@ -507,8 +507,8 @@ if ($TestQueryResult) {
     Start-CMClientSettingDeployment -ClientSettingName $ClientSettingName -CollectionName "$($CollectionIPUDeployment.Name)"
     Write-Host 'Deployming apps & Maintenance Window' -ForegroundColor Magenta
     Write-Host " Creating Deployment for $IPUAppName to Collection $($CollectionIPUDeployment.name)" -ForegroundColor Green
-    $IPUAppDeployment = New-CMApplicationDeployment -Name $IPUAppName -CollectionId $CollectionIPUDeployment.CollectionID -DeployAction Install -DeployPurpose Required -UserNotification DisplayAll -DeadlineDateTime $DeadlineDateTime
-    $DSAppDeployment = New-CMApplicationDeployment -Name $($DSAppName.Name) -CollectionId $CollectionIPUDeployment.CollectionID -DeployAction Install -DeployPurpose Required -UserNotification DisplayAll 
+    New-CMApplicationDeployment -Name $IPUAppName -CollectionId $CollectionIPUDeployment.CollectionID -DeployAction Install -DeployPurpose Required -UserNotification DisplayAll -DeadlineDateTime $DeadlineDateTime
+    New-CMApplicationDeployment -Name $($DSAppName.Name) -CollectionId $CollectionIPUDeployment.CollectionID -DeployAction Install -DeployPurpose Required -UserNotification DisplayAll 
 }
 
 
@@ -526,7 +526,7 @@ $Script = { $IpuResultPath = 'HKLM:\SOFTWARE\Onevinn\IpuResult'
 }
 
 Write-Host 'Importing console script: .\ConsoleScript\Reset_IPU_Status.ps1' -ForegroundColor Yellow
-$CreateScript = New-CMPowershellScript -ScriptName 'IPU Reset' -Script $Script
+New-CMPowershellScript -ScriptName 'IPU Reset' -Script $Script
 Write-Host "Import complete. Don't forget to approve it!" -ForegroundColor Green
 
 
