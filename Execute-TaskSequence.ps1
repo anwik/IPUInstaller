@@ -1,5 +1,5 @@
 
-$LogFile = "$env:windir\CCM\Logs\Execute-TaskSequence.log"
+$LogFile = "$env:ProgramData\~IPULog\Execute-TaskSequence.log"
 
 Function Write-Log {
     param (

@@ -1,8 +1,16 @@
 $BuildNumber = (Get-WmiObject -Class Win32_OperatingSystem).BuildNumber
 $VersionNumber = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name ReleaseId).ReleaseID
 $IpuResultPath = 'HKLM:\SOFTWARE\Onevinn\IpuResult'
+$UpdateLevel = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -Name UBR).UBR
+$OSLevel = $BuildNumber + ".$UpdateLevel"
+
 $LogFile = "$env:ProgramData\~IPULog\IpuInstaller_EnablementPackage.log"
 $CabFile = "$($PSScriptRoot)\Windows10.0-KB5003791-x64.cab"
+
+Param (
+    [parameter(Mandatory = $false)]
+    [string]$TSName
+)
 
 # Process function
 function Start-Proc {
@@ -63,7 +71,7 @@ if (!(Test-Path $CabFile)) {
 # Check OSVersion, 20H2 is OK, anything else is not
 
 
-if ($VersionNumber -eq '2009') {
+if ($OSLevel -ge '19042.1237') {
     Write-Log -Message "OSVersion is: $VersionNumber, Continuing..."
 } else {
     Write-Log -Message "Error: OSVersion is $VersionNumber. Aborting..."
@@ -77,40 +85,10 @@ if (Test-Path $IpuResultPath) {
     Write-Log -Message 'It certainly has. Clearing registry key HKLM:\SOFTWARE\Onevinn\IpuResult'
     New-ItemProperty -Path $IpuResultPath -Name 'LastStatus' -Value 'Unknown' -Force -ErrorAction SilentlyContinue | Out-Null
 } else {
+    New-Item $IpuResultPath -Force
     Write-Log -Message "Nope, this computer hasn't used IPU installer before. Proceeding..."
 }    
 
-
-# Dependency check
-
-# List of hotfixes that has to be installed prior installing the enablement package - (https://support.microsoft.com/en-us/topic/kb5003791-update-to-windows-10-version-21h2-by-using-an-enablement-package-8bc077be-18d7-4aac-81ce-6f6dad2cd384)
-$HotfixList = @(
-    'KB5005565'
-    'KB5006670'
-    'KB5007186'
-)
-
-# Check installed hotfixes
-$Hotfixes = (Get-HotFix).HotFixID
-
-# Match installed hotfixes with $HotFixList
-$InstalledHotfixes = @()
-[array]$InstalledHotfixes
-Write-Log -Message 'Checking that hotfix: KB5005565, KB5006670 or KB5007186 is installed'
-foreach ($Hotfix in $HotfixList) {
-    if ($Hotfixes -contains $Hotfix) {
-        $InstalledHotfixes += $Hotfix
-    }
-}
-
-# Check if $InstalledHotfixes returns true
-if ($InstalledHotfixes) {
-    Write-Log -Message "Hotfix $Hotfix installed! Proceeding to install phase..." 
-    
-} else {
-    Write-Log -Message 'Hotfix not installed. Aborting...'
-    Exit 1
-}
 
 
 # Perform the upgrade
@@ -118,15 +96,29 @@ Write-Log -Message '### Installation started ###'
 try {
     $result = Start-Proc -Exe 'dism.exe' -Arguments "/Online /Add-Package /PackagePath:$($CabFile) /NoRestart" -Hidden
     Write-Log -Message "ExitCode: $($result.ExitCode)"
-    Write-Log -Message "StdOut: $($result.stdout)" 
+
+    if ( $result.ExitCode -eq '3010') {
+        Write-Log -Message 'Upgrade succeeded!'
+        Write-Log -Message '### Finished installation of 21H2 enablement package ###'
+        New-ItemProperty -Path $IpuResultPath -Name 'LastStatus' -Value 'Success' -Force -ErrorAction SilentlyContinue | Out-Null
+
+        #CleanUp of Driver Package
+        Remove-Item -Path "$($env:ProgramData)\~IPUDrivers" -Recurse -Force -EA SilentlyContinue
+        Write-Log -Message 'Deleted temporary Driver Package from ProgramData'
+        
+        $host.SetShouldExit($result.ExitCode)
+    
+        # Start BIOS & DriverUpdate Task Sequence
+         
+    }
+
+    if ($TSName) {
+        . .\Execute-TaskSequence.ps1 -Name "$TSName"
+    }
+
     if ($result.StdErr -ne '') {
         Write-Log -Message "StdErr: $($result.stderr)"
         New-ItemProperty -Path $IpuResultPath -Name 'LastStatus' -Value "Error: $_.Exception.Message" -Force -ErrorAction SilentlyContinue | Out-Null
-        Exit 1
     }
-    
+    #Start-Process -FilePath 'Dism.exe' -ArgumentList "/Online /Add-Package /PackagePath:$($CabFile) /NoRestart" -NoNewWindow -Wait
 } catch {}
-
-# Finish logging
-Write-Log -Message '### Finished installation of 21H2 enablement package ###'
-New-ItemProperty -Path $IpuResultPath -Name 'LastStatus' -Value 'Success' -Force -ErrorAction SilentlyContinue | Out-Null
